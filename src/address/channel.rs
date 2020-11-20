@@ -294,7 +294,7 @@ impl<A: Actor> AddressSender<A> {
         A: Handler<M>,
         <A as Actor>::Context: ToEnvelope<A, M>,
         M::Result: Send,
-        M: Message + Send + 'static,
+        M: Message + Send,
     {
         // If the sender is currently blocked, reject the message
         if !self.poll_unparked(false, None).is_ready() {
@@ -464,8 +464,8 @@ impl<A, M> Sender<M> for AddressSender<A>
 where
     A: Handler<M>,
     A::Context: ToEnvelope<A, M>,
+    M: Message + Send,
     M::Result: Send,
-    M: Message + Send + 'static,
 {
     fn do_send(&self, msg: M) -> Result<(), SendError<M>> {
         self.do_send(msg)
@@ -570,8 +570,8 @@ impl<A, M> WeakSender<M> for WeakAddressSender<A>
 where
     A: Handler<M>,
     A::Context: ToEnvelope<A, M>,
+    M: Message + Send,
     M::Result: Send,
-    M: Message + Send + 'static,
 {
     fn upgrade(&self) -> Option<Box<dyn Sender<M> + Sync>> {
         if let Some(inner) = WeakAddressSender::upgrade(&self) {

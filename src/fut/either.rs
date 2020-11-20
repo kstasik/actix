@@ -3,11 +3,10 @@ use std::task::{Context, Poll};
 
 use crate::actor::Actor;
 use crate::fut::ActorFuture;
-use pin_project::pin_project;
 
 /// Combines two different futures yielding the same item and error
 /// types into a single type.
-#[pin_project(project = EitherProj)]
+#[pin_project::pin_project(project = EitherProj)]
 #[derive(Debug)]
 pub enum Either<A, B> {
     /// First branch of the type

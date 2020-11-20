@@ -16,30 +16,21 @@ use crate::fut::ActorFuture;
 #[pin_project]
 #[derive(Debug)]
 #[must_use = "futures do nothing unless polled"]
-pub struct Timeout<F>
-where
-    F: ActorFuture,
-{
+pub struct Timeout<F: ActorFuture> {
     #[pin]
     fut: F,
     #[pin]
     timeout: Delay,
 }
 
-pub fn new<F>(future: F, timeout: Duration) -> Timeout<F>
-where
-    F: ActorFuture,
-{
+pub fn new<F: ActorFuture>(future: F, timeout: Duration) -> Timeout<F> {
     Timeout {
         fut: future,
         timeout: delay_for(timeout),
     }
 }
 
-impl<F> ActorFuture for Timeout<F>
-where
-    F: ActorFuture,
-{
+impl<F: ActorFuture> ActorFuture for Timeout<F> {
     type Output = Result<F::Output, ()>;
     type Actor = F::Actor;
 
@@ -51,7 +42,7 @@ where
     ) -> Poll<Self::Output> {
         let this = self.project();
 
-        if let Poll::Ready(_) = this.timeout.poll(task) {
+        if this.timeout.poll(task).is_ready() {
             return Poll::Ready(Err(()));
         }
 

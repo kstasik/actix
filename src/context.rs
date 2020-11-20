@@ -47,6 +47,11 @@ where
     A: Actor<Context = Self>,
 {
     #[inline]
+    fn address(&self) -> Addr<A> {
+        self.parts.address()
+    }
+
+    #[inline]
     fn spawn<F>(&mut self, fut: F) -> SpawnHandle
     where
         F: ActorFuture<Output = (), Actor = A> + 'static,
@@ -70,11 +75,6 @@ where
     #[inline]
     fn cancel_future(&mut self, handle: SpawnHandle) -> bool {
         self.parts.cancel_future(handle)
-    }
-
-    #[inline]
-    fn address(&self) -> Addr<A> {
-        self.parts.address()
     }
 }
 

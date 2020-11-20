@@ -77,7 +77,11 @@ struct InnerWriter<E: From<io::Error>> {
     task: Option<task::Waker>,
 }
 
-impl<T: AsyncWrite, E: From<io::Error> + 'static> Writer<T, E> {
+impl<T, E> Writer<T, E>
+where
+    T: AsyncWrite,
+    E: From<io::Error> + 'static,
+{
     pub fn new<A, C>(io: T, ctx: &mut C) -> Self
     where
         A: Actor<Context = C> + WriteHandler<E>,
@@ -149,10 +153,10 @@ where
     inner: UnsafeWriter<T, E>,
 }
 
-impl<T: 'static, E: 'static, A> ActorFuture for WriterFut<T, E, A>
+impl<T, E, A> ActorFuture for WriterFut<T, E, A>
 where
-    T: AsyncWrite + Unpin,
-    E: From<io::Error>,
+    T: AsyncWrite + Unpin + 'static,
+    E: From<io::Error> + 'static,
     A: Actor + WriteHandler<E>,
     A::Context: AsyncContext<A>,
 {
@@ -306,12 +310,20 @@ where
 
 /// A wrapper for the `AsyncWrite` and `Encoder` types. The AsyncWrite will be flushed when this
 /// struct is dropped.
-pub struct FramedWrite<I, T: AsyncWrite + Unpin, U: Encoder<I>> {
+pub struct FramedWrite<I, T, U>
+where
+    T: AsyncWrite + Unpin,
+    U: Encoder<I>,
+{
     enc: U,
     inner: UnsafeWriter<T, U::Error>,
 }
 
-impl<I, T: AsyncWrite + Unpin, U: Encoder<I>> FramedWrite<I, T, U> {
+impl<I, T, U> FramedWrite<I, T, U>
+where
+    T: AsyncWrite + Unpin,
+    U: Encoder<I>,
+{
     pub fn new<A, C>(io: T, enc: U, ctx: &mut C) -> Self
     where
         A: Actor<Context = C> + WriteHandler<U::Error>,
@@ -406,7 +418,11 @@ impl<I, T: AsyncWrite + Unpin, U: Encoder<I>> FramedWrite<I, T, U> {
     }
 }
 
-impl<I, T: AsyncWrite + Unpin, U: Encoder<I>> Drop for FramedWrite<I, T, U> {
+impl<I, T, U> Drop for FramedWrite<I, T, U>
+where
+    T: AsyncWrite + Unpin,
+    U: Encoder<I>,
+{
     fn drop(&mut self) {
         // Attempts to write any remaining bytes to the stream and flush it
         let mut async_writer = self.inner.1.borrow_mut();
@@ -420,18 +436,24 @@ impl<I, T: AsyncWrite + Unpin, U: Encoder<I>> Drop for FramedWrite<I, T, U> {
 }
 
 /// A wrapper for the `Sink` type.
-pub struct SinkWrite<I, S: Sink<I> + Unpin> {
+pub struct SinkWrite<I, S>
+where
+    S: Sink<I> + Unpin,
+{
     inner: Rc<RefCell<InnerSinkWrite<I, S>>>,
 }
 
-impl<I: 'static, S: Sink<I> + Unpin + 'static> SinkWrite<I, S> {
+impl<I, S> SinkWrite<I, S>
+where
+    I: 'static,
+    S: Sink<I> + Unpin + 'static,
+{
     pub fn new<A, C>(sink: S, ctxt: &mut C) -> Self
     where
         A: Actor<Context = C> + WriteHandler<S::Error>,
         C: AsyncContext<A>,
     {
         let inner = Rc::new(RefCell::new(InnerSinkWrite {
-            _i: PhantomData,
             closing_flag: Flags::empty(),
             sink,
             task: None,
@@ -487,7 +509,6 @@ impl<I: 'static, S: Sink<I> + Unpin + 'static> SinkWrite<I, S> {
 }
 
 struct InnerSinkWrite<I, S: Sink<I>> {
-    _i: PhantomData<I>,
     closing_flag: Flags,
     sink: S,
     task: Option<task::Waker>,
@@ -498,13 +519,18 @@ struct InnerSinkWrite<I, S: Sink<I>> {
     buffer: VecDeque<I>,
 }
 
-struct SinkWriteFuture<I: 'static, S: Sink<I>, A> {
+struct SinkWriteFuture<I, S, A>
+where
+    I: 'static,
+    S: Sink<I>,
+{
     inner: Rc<RefCell<InnerSinkWrite<I, S>>>,
     _actor: PhantomData<A>,
 }
 
-impl<I: 'static, S: Sink<I>, A> ActorFuture for SinkWriteFuture<I, S, A>
+impl<I, S, A> ActorFuture for SinkWriteFuture<I, S, A>
 where
+    I: 'static,
     S: Sink<I> + Unpin,
     A: Actor + WriteHandler<S::Error>,
     A::Context: AsyncContext<A>,

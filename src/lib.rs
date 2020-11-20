@@ -187,9 +187,9 @@ pub mod dev {
 ///
 /// This function panics if the actix system is already running.
 #[allow(clippy::unit_arg)]
-pub fn run<R>(f: R) -> std::io::Result<()>
+pub fn run<R>(f: R) -> std::io::Result<R::Output>
 where
-    R: futures_util::future::Future<Output = ()> + 'static,
+    R: std::future::Future + 'static,
 {
     Ok(actix_rt::System::new("Default").block_on(f))
 }
@@ -201,7 +201,7 @@ where
 /// This function panics if the actix system is not running.
 pub fn spawn<F>(f: F)
 where
-    F: futures_util::future::Future<Output = ()> + 'static,
+    F: std::future::Future<Output = ()> + 'static,
 {
     actix_rt::spawn(f);
 }

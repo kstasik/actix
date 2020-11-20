@@ -16,7 +16,6 @@ use crossbeam_channel as cb_channel;
 use futures_channel::oneshot::Sender as SyncSender;
 use futures_util::{future::Future, stream::StreamExt};
 use log::warn;
-use pin_project::pin_project;
 
 use crate::actor::{Actor, ActorContext, ActorState, Running};
 use crate::address::channel;
@@ -93,7 +92,6 @@ use crate::handler::{Handler, Message, MessageResponse};
 ///     });
 /// }
 /// ```
-#[pin_project]
 pub struct SyncArbiter<A>
 where
     A: Actor<Context = SyncContext<A>>,
@@ -154,7 +152,7 @@ where
     type Output = ();
 
     fn poll(self: Pin<&mut Self>, cx: &mut task::Context<'_>) -> Poll<Self::Output> {
-        let this = self.project();
+        let this = self.get_mut();
         loop {
             match this.msgs.poll_next_unpin(cx) {
                 Poll::Ready(Some(msg)) => {
@@ -172,7 +170,7 @@ where
             Poll::Pending
         } else {
             // stop sync arbiters
-            *this.queue = None;
+            this.queue = None;
             Poll::Ready(())
         }
     }

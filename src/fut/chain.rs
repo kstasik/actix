@@ -1,11 +1,10 @@
-use pin_project::pin_project;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
 use crate::actor::Actor;
 use crate::fut::ActorFuture;
 
-#[pin_project(project = ChainProj)]
+#[pin_project::pin_project(project = ChainProj)]
 #[must_use = "futures do nothing unless you `.await` or poll them"]
 #[derive(Debug)]
 pub enum Chain<A, B, C> {

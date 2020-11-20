@@ -1,15 +1,13 @@
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
-use pin_project::pin_project;
-
 use crate::actor::Actor;
 use crate::fut::ActorFuture;
 
 /// Future for the `map` combinator, changing the type of a future.
 ///
 /// This is created by the `ActorFuture::map` method.
-#[pin_project]
+#[pin_project::pin_project]
 #[derive(Debug)]
 #[must_use = "futures do nothing unless polled"]
 pub struct Map<A, F>
@@ -21,10 +19,7 @@ where
     f: Option<F>,
 }
 
-pub fn new<A, F>(future: A, f: F) -> Map<A, F>
-where
-    A: ActorFuture,
-{
+pub fn new<A: ActorFuture, F>(future: A, f: F) -> Map<A, F> {
     Map { future, f: Some(f) }
 }
 

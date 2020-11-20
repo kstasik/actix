@@ -8,14 +8,13 @@ use crate::actor::Actor;
 use crate::fut::ActorFuture;
 
 /// Future for the [`ready`](ready()) function.
+#[pin_project::pin_project]
 #[derive(Debug)]
 #[must_use = "futures do nothing unless polled"]
 pub struct Ready<T, A> {
     inner: Option<T>,
     act: PhantomData<A>,
 }
-
-impl<T, A> Unpin for Ready<T, A> {}
 
 /// Create a future that is immediately ready with a value.
 pub fn ready<T, A>(r: T) -> Ready<T, A> {
@@ -34,11 +33,16 @@ where
 
     #[inline]
     fn poll(
-        mut self: Pin<&mut Self>,
+        self: Pin<&mut Self>,
         _: &mut Self::Actor,
         _: &mut <Self::Actor as Actor>::Context,
         _: &mut task::Context<'_>,
     ) -> Poll<Self::Output> {
-        Poll::Ready(self.inner.take().expect("cannot poll Result twice"))
+        Poll::Ready(
+            self.project()
+                .inner
+                .take()
+                .expect("cannot poll Result twice"),
+        )
     }
 }

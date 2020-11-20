@@ -136,8 +136,7 @@ where
     {
         let handle = self.handles[0].next();
         self.handles[0] = handle;
-        let fut: Box<dyn ActorFuture<Output = (), Actor = A>> = Box::new(fut);
-        self.items.push((handle, Pin::from(fut)));
+        self.items.push((handle, Box::pin(fut)));
         handle
     }
 
@@ -198,7 +197,7 @@ where
 
 pub struct ContextFut<A, C>
 where
-    C: AsyncContextParts<A> + Unpin,
+    C: AsyncContextParts<A>,
     A: Actor<Context = C>,
 {
     ctx: C,
@@ -208,9 +207,16 @@ where
     items: SmallVec<[Item<A>; 3]>,
 }
 
+impl<A, C> Unpin for ContextFut<A, C>
+where
+    C: AsyncContextParts<A>,
+    A: Actor<Context = C>,
+{
+}
+
 impl<A, C> fmt::Debug for ContextFut<A, C>
 where
-    C: AsyncContextParts<A> + Unpin,
+    C: AsyncContextParts<A>,
     A: Actor<Context = C>,
 {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -220,7 +226,7 @@ where
 
 impl<A, C> Drop for ContextFut<A, C>
 where
-    C: AsyncContextParts<A> + Unpin,
+    C: AsyncContextParts<A>,
     A: Actor<Context = C>,
 {
     fn drop(&mut self) {
@@ -235,7 +241,7 @@ where
 
 impl<A, C> ContextFut<A, C>
 where
-    C: AsyncContextParts<A> + Unpin,
+    C: AsyncContextParts<A>,
     A: Actor<Context = C>,
 {
     pub fn new(ctx: C, act: A, mailbox: Mailbox<A>) -> Self {
@@ -337,7 +343,7 @@ where
 #[doc(hidden)]
 impl<A, C> Future for ContextFut<A, C>
 where
-    C: AsyncContextParts<A> + Unpin,
+    C: AsyncContextParts<A>,
     A: Actor<Context = C>,
 {
     type Output = ();

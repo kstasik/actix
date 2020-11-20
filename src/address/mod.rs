@@ -105,7 +105,7 @@ impl<A: Actor> Addr<A> {
     /// method registers the current task in the receiver's queue.
     pub fn try_send<M>(&self, msg: M) -> Result<(), SendError<M>>
     where
-        M: Message + Send + 'static,
+        M: Message + Send,
         M::Result: Send,
         A: Handler<M>,
         A::Context: ToEnvelope<A, M>,
@@ -136,7 +136,7 @@ impl<A: Actor> Addr<A> {
     }
 
     /// Returns the `Recipient` for a specific message type.
-    pub fn recipient<M: 'static>(self) -> Recipient<M>
+    pub fn recipient<M>(self) -> Recipient<M>
     where
         A: Handler<M>,
         A::Context: ToEnvelope<A, M>,
@@ -200,7 +200,7 @@ impl<A: Actor> WeakAddr<A> {
         }
     }
 
-    pub fn recipient<M: 'static>(self) -> WeakRecipient<M>
+    pub fn recipient<M>(self) -> WeakRecipient<M>
     where
         A: Handler<M>,
         A::Context: ToEnvelope<A, M>,
@@ -225,7 +225,7 @@ impl<A: Actor> Clone for WeakAddr<A> {
 /// You can get a recipient using the `Addr::recipient()` method. It
 /// is possible to use the `Clone::clone()` method to get a cloned
 /// recipient.
-pub struct Recipient<M: Message>
+pub struct Recipient<M>
 where
     M: Message + Send,
     M::Result: Send,
@@ -279,9 +279,10 @@ where
     }
 }
 
-impl<A: Actor, M: Message + Send + 'static> Into<Recipient<M>> for Addr<A>
+impl<A, M> Into<Recipient<M>> for Addr<A>
 where
-    A: Handler<M>,
+    A: Actor + Handler<M>,
+    M: Message + Send,
     M::Result: Send,
     A::Context: ToEnvelope<A, M>,
 {
@@ -340,7 +341,7 @@ where
 }
 
 /// A weakly referenced counterpart to `Recipient<M>`
-pub struct WeakRecipient<M: Message>
+pub struct WeakRecipient<M>
 where
     M: Message + Send,
     M::Result: Send,
@@ -373,9 +374,10 @@ where
     }
 }
 
-impl<A: Actor, M: Message + Send + 'static> Into<WeakRecipient<M>> for Addr<A>
+impl<A, M> Into<WeakRecipient<M>> for Addr<A>
 where
-    A: Handler<M>,
+    A: Actor + Handler<M>,
+    M: Message + Send,
     M::Result: Send,
     A::Context: ToEnvelope<A, M>,
 {
@@ -384,9 +386,10 @@ where
     }
 }
 
-impl<A: Actor, M: Message + Send + 'static> Into<WeakRecipient<M>> for WeakAddr<A>
+impl<A, M> Into<WeakRecipient<M>> for WeakAddr<A>
 where
-    A: Handler<M>,
+    A: Actor + Handler<M>,
+    M: Message + Send,
     M::Result: Send,
     A::Context: ToEnvelope<A, M>,
 {

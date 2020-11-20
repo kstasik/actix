@@ -4,7 +4,6 @@ use std::task::{Context, Poll};
 
 use futures_util::stream::Stream;
 use log::error;
-use pin_project::pin_project;
 
 use crate::actor::{Actor, ActorContext, ActorState, AsyncContext, SpawnHandle};
 use crate::fut::ActorFuture;
@@ -20,10 +19,7 @@ use crate::fut::ActorFuture;
 /// When stream completes, `finished()` method get called. By default
 /// `finished()` method stops actor execution.
 #[allow(unused_variables)]
-pub trait StreamHandler<I>
-where
-    Self: Actor,
-{
+pub trait StreamHandler<I>: Actor {
     /// Method is called for every message received by this Actor
     fn handle(&mut self, item: I, ctx: &mut Self::Context);
 
@@ -81,7 +77,6 @@ where
     where
         Self::Context: AsyncContext<Self>,
         S: Stream<Item = I> + 'static,
-        I: 'static,
     {
         if ctx.state() == ActorState::Stopped {
             error!("Context::add_stream called for stopped actor.");
@@ -92,30 +87,28 @@ where
     }
 }
 
-#[pin_project]
-pub(crate) struct ActorStream<A, M, S> {
+#[pin_project::pin_project]
+pub(crate) struct ActorStream<A, S> {
     #[pin]
     stream: S,
     started: bool,
     act: PhantomData<A>,
-    msg: PhantomData<M>,
 }
 
-impl<A, M, S> ActorStream<A, M, S> {
+impl<A, S> ActorStream<A, S> {
     pub fn new(fut: S) -> Self {
         Self {
             stream: fut,
             started: false,
             act: PhantomData,
-            msg: PhantomData,
         }
     }
 }
 
-impl<A, M, S> ActorFuture for ActorStream<A, M, S>
+impl<A, S> ActorFuture for ActorStream<A, S>
 where
-    S: Stream<Item = M>,
-    A: Actor + StreamHandler<M>,
+    S: Stream,
+    A: Actor + StreamHandler<S::Item>,
     A::Context: AsyncContext<A>,
 {
     type Output = ();
@@ -131,7 +124,7 @@ where
 
         if !*this.started {
             *this.started = true;
-            <A as StreamHandler<M>>::started(act, ctx);
+            <A as StreamHandler<S::Item>>::started(act, ctx);
         }
 
         match this.stream.as_mut().poll_next(task) {

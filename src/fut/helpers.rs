@@ -34,10 +34,7 @@ impl<S> Finish<S> {
     }
 }
 
-impl<S> Future for Finish<S>
-where
-    S: Stream,
-{
+impl<S: Stream> Future for Finish<S> {
     type Output = ();
 
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {

@@ -34,8 +34,9 @@ pub use self::stream_timeout::StreamTimeout;
 pub use self::then::Then;
 pub use self::timeout::Timeout;
 
-use crate::actor::Actor;
 use std::pin::Pin;
+
+use crate::actor::Actor;
 
 /// Trait for types which are a placeholder of a value that may become
 /// available at some later point in time.
@@ -429,6 +430,7 @@ impl<S: Stream + Unpin, A: Actor> WrapStream<A> for S {
         wrap_stream(self)
     }
 }
+
 #[pin_project]
 pub struct StreamWrap<S, A>
 where
