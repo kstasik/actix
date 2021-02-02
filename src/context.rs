@@ -138,9 +138,9 @@ where
     /// }
     ///
     /// # fn main() {
-    /// # let mut sys = System::new("test");
+    /// # let mut sys = System::new();
     /// let addr = sys.block_on(async { MyActor.start() });
-    /// sys.run();
+    /// sys.run().unwrap();
     /// # }
     /// ```
     pub fn set_mailbox_capacity(&mut self, cap: usize) {

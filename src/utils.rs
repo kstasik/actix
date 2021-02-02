@@ -76,9 +76,9 @@ pin_project! {
     ///    }
     /// }
     /// # fn main() {
-    /// #    let mut sys = System::new("example");
+    /// #    let mut sys = System::new();
     /// #    let addr = sys.block_on(async { MyActor.start() });
-    /// #    sys.run();
+    /// #    sys.run().unwrap();
     /// # }
     #[must_use = "future do nothing unless polled"]
     pub struct TimerFunc<A>
@@ -176,9 +176,9 @@ where
 ///    }
 /// }
 /// # fn main() {
-/// #    let mut sys = System::new("example");
+/// #    let mut sys = System::new();
 /// #    let addr = sys.block_on(async { MyActor.start() });
-/// #    sys.run();
+/// #    sys.run().unwrap();
 /// # }
 /// ```
 #[must_use = "future do nothing unless polled"]

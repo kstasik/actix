@@ -72,9 +72,9 @@ where
     /// }
     ///
     /// fn main() {
-    ///     let mut sys = System::new("example");
+    ///     let mut sys = System::new();
     ///     let addr = sys.block_on(async { MyActor.start() });
-    ///     sys.run();
+    ///     sys.run().unwrap();
     /// }
     /// ```
     fn add_stream<S>(fut: S, ctx: &mut Self::Context) -> SpawnHandle

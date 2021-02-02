@@ -78,7 +78,8 @@ use crate::handler::{Handler, Message, MessageResponse};
 /// }
 ///
 /// fn main() {
-///     System::run(|| {
+///     let sys = System::new();
+///     sys.block_on(async {
 ///         // Start the SyncArbiter with 2 threads, and receive the address of the Actor pool.
 ///         let addr = SyncArbiter::start(2, || SyncActor);
 ///
@@ -89,8 +90,9 @@ use crate::handler::{Handler, Message, MessageResponse};
 ///             addr.do_send(Fibonacci(n));
 ///         }
 ///
-/// #       System::current().stop();
+///         System::current().stop();
 ///     });
+///     sys.run().unwrap();
 /// }
 /// ```
 pub struct SyncArbiter<A>
@@ -129,10 +131,10 @@ where
             });
         }
 
-        System::current().arbiter().send(Box::pin(Self {
+        System::current().arbiter().spawn(Self {
             queue: Some(sender),
             msgs: rx,
-        }));
+        });
 
         Addr::new(tx)
     }

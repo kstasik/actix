@@ -115,9 +115,9 @@ pub trait Actor: Sized + Unpin + 'static {
     ///
     /// fn main() {
     ///     // initialize system
-    ///     System::run(|| {
-    ///         let addr = MyActor.start(); // <- start actor and get its address
-    /// #       System::current().stop();
+    ///     let sys = System::new();
+    ///     sys.block_on(async {
+    ///          let addr = MyActor.start(); // <- start actor and get its address
     ///     });
     /// }
     /// ```
@@ -149,7 +149,7 @@ pub trait Actor: Sized + Unpin + 'static {
         let (tx, rx) = channel::channel(DEFAULT_CAPACITY);
 
         // create actor
-        arb.exec_fn(move || {
+        arb.spawn_fn(move || {
             let mut ctx = Context::with_receiver(rx);
             let act = f(&mut ctx);
             let fut = ctx.into_future(act);
@@ -179,9 +179,9 @@ pub trait Actor: Sized + Unpin + 'static {
     ///
     /// fn main() {
     ///     // initialize system
-    ///     System::run(|| {
+    ///     let sys = System::new();
+    ///     sys.block_on(async {
     ///         let addr = MyActor::create(|ctx: &mut Context<MyActor>| MyActor { val: 10 });
-    /// #       System::current().stop();
     ///     });
     /// }
     /// ```
@@ -341,9 +341,9 @@ where
     /// }
     ///
     /// fn main() {
-    ///     let mut sys = System::new("example");
+    ///     let mut sys = System::new();
     ///     let addr = sys.block_on(async { MyActor.start() });
-    ///     sys.run();
+    ///     sys.run().unwrap();
     ///  }
     /// ```
     fn add_stream<S>(&mut self, fut: S) -> SpawnHandle
@@ -388,9 +388,11 @@ where
     /// }
     ///
     /// fn main() {
-    ///    System::run(|| {
-    ///        let addr = MyActor.start();
-    ///    });
+    ///     let sys = System::new();
+    ///     sys.block_on(async {
+    ///         let addr = MyActor.start();
+    ///     });
+    ///     sys.run().unwrap();
     /// }
     /// ```
     fn add_message_stream<S>(&mut self, fut: S)

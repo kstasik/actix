@@ -86,7 +86,8 @@ fn test_active_address() {
     let addr2 = Arc::clone(&addr);
 
     let _ = std::thread::spawn(move || {
-        let _ = System::run(move || {
+        let sys = System::new();
+        sys.block_on(async {
             *addr2.lock().unwrap() = Some(
                 MyActor {
                     started: started1,
@@ -98,6 +99,7 @@ fn test_active_address() {
                 .start(),
             );
         });
+        sys.run().unwrap();
     });
     std::thread::sleep(Duration::from_millis(100));
 
@@ -115,7 +117,8 @@ fn test_stop_after_drop_address() {
     let stopping1 = Arc::clone(&stopping);
     let stopped1 = Arc::clone(&stopped);
 
-    System::run(move || {
+    let sys = System::new();
+    sys.block_on(async {
         let addr = MyActor {
             started: started1,
             stopping: stopping1,
@@ -131,8 +134,8 @@ fn test_stop_after_drop_address() {
             sleep(Duration::new(0, 10_000)).await;
             System::current().stop();
         });
-    })
-    .unwrap();
+    });
+    sys.run().unwrap();
 
     assert!(started.load(Ordering::Relaxed), "Not started");
     assert!(stopping.load(Ordering::Relaxed), "Not stopping");
@@ -148,7 +151,8 @@ fn test_stop_after_drop_sync_address() {
     let stopping1 = Arc::clone(&stopping);
     let stopped1 = Arc::clone(&stopped);
 
-    System::run(move || {
+    let sys = System::new();
+    sys.block_on(async {
         let addr = MyActor {
             started: started1,
             stopping: stopping1,
@@ -162,9 +166,10 @@ fn test_stop_after_drop_sync_address() {
             sleep(Duration::new(0, 100)).await;
             drop(addr);
             System::current().stop();
-        });
-    })
-    .unwrap();
+        })
+    });
+
+    sys.run().unwrap();
 
     assert!(started.load(Ordering::Relaxed), "Not started");
     assert!(stopping.load(Ordering::Relaxed), "Not stopping");
@@ -185,7 +190,7 @@ fn test_stop_after_drop_sync_actor() {
     let stopping2 = Arc::clone(&stopping);
     let stopped2 = Arc::clone(&stopped);
 
-    System::run(move || {
+    System::new().block_on(async {
         let addr = SyncArbiter::start(1, move || MySyncActor {
             started: Arc::clone(&started1),
             stopping: Arc::clone(&stopping1),
@@ -193,18 +198,15 @@ fn test_stop_after_drop_sync_actor() {
             restore_after_stop: false,
         });
 
-        actix_rt::spawn(async move {
-            sleep(Duration::from_secs(2)).await;
-            assert!(started2.load(Ordering::Relaxed), "Not started");
-            assert!(!stopping2.load(Ordering::Relaxed), "Stopping");
-            assert!(!stopped2.load(Ordering::Relaxed), "Stopped");
-            drop(addr);
+        sleep(Duration::from_secs(2)).await;
+        assert!(started2.load(Ordering::Relaxed), "Not started");
+        assert!(!stopping2.load(Ordering::Relaxed), "Stopping");
+        assert!(!stopped2.load(Ordering::Relaxed), "Stopped");
+        drop(addr);
 
-            sleep(Duration::from_secs(2)).await;
-            System::current().stop();
-        });
-    })
-    .unwrap();
+        sleep(Duration::from_secs(2)).await;
+        System::current().stop();
+    });
 
     assert!(started.load(Ordering::Relaxed), "Not started");
     assert!(stopping.load(Ordering::Relaxed), "Not stopping");
@@ -220,7 +222,7 @@ fn test_stop() {
     let stopping1 = Arc::clone(&stopping);
     let stopped1 = Arc::clone(&stopped);
 
-    System::run(move || {
+    System::new().block_on(async {
         MyActor {
             started: started1,
             stopping: stopping1,
@@ -230,12 +232,8 @@ fn test_stop() {
         }
         .start();
 
-        actix_rt::spawn(async move {
-            sleep(Duration::new(0, 100)).await;
-            System::current().stop();
-        });
-    })
-    .unwrap();
+        sleep(Duration::new(0, 100)).await;
+    });
 
     assert!(started.load(Ordering::Relaxed), "Not started");
     assert!(stopping.load(Ordering::Relaxed), "Not stopping");
@@ -251,7 +249,7 @@ fn test_stop_restore_after_stopping() {
     let stopping1 = Arc::clone(&stopping);
     let stopped1 = Arc::clone(&stopped);
 
-    System::run(move || {
+    System::new().block_on(async {
         MyActor {
             started: started1,
             stopping: stopping1,
@@ -261,12 +259,8 @@ fn test_stop_restore_after_stopping() {
         }
         .start();
 
-        actix_rt::spawn(async move {
-            sleep(Duration::new(0, 100)).await;
-            System::current().stop();
-        });
-    })
-    .unwrap();
+        sleep(Duration::new(0, 100)).await;
+    });
 
     assert!(started.load(Ordering::Relaxed), "Not started");
     assert!(stopping.load(Ordering::Relaxed), "Not stopping");

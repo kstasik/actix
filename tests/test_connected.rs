@@ -22,9 +22,12 @@ impl Actor for MyActor {
 
 #[actix_rt::test]
 async fn test_connected() {
-    Arbiter::spawn(async move {
-        let addr = MyActor::start(MyActor);
-        sleep(Duration::from_millis(350)).await;
-        drop(addr);
-    });
+    // actix_rt::spawn(async move {
+    //     let addr = MyActor::start(MyActor);
+    //     sleep(Duration::from_millis(350)).await;
+    //     drop(addr);
+    // });
+    let addr = MyActor::start(MyActor);
+    sleep(Duration::from_millis(350)).await;
+    drop(addr);
 }

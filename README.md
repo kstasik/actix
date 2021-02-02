@@ -53,7 +53,7 @@ In order to use actix you first need to create a `System`.
 
 ```rust,ignore
 fn main() {
-    let system = actix::System::new("test");
+    let system = actix::System::new();
 
     system.run();
 }
@@ -86,7 +86,7 @@ impl Actor for MyActor {
 }
 
 fn main() {
-    let mut system = System::new("test");
+    let mut system = System::new();
 
     let addr = system.block_on(async { MyActor.start() });
 
@@ -201,7 +201,7 @@ impl Handler<Ping> for Game {
 }
 
 fn main() {
-    let mut system = System::new("test");
+    let mut system = System::new();
 
     // To get a Recipient object, we need to use a different builder method
     // which will allow postponing actor creation
@@ -225,7 +225,7 @@ fn main() {
                     name: String::from("Game 1"),
                     addr: addr2.recipient(),
                 }
-            });
+            })
     });
 
     system.run();

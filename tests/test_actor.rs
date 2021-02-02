@@ -164,7 +164,8 @@ fn test_restart_sync_actor() {
     let stopped1 = Arc::clone(&stopped);
     let msgs1 = Arc::clone(&msgs);
 
-    System::run(move || {
+    let sys = System::new();
+    sys.block_on(async {
         let addr = SyncArbiter::start(1, move || MySyncActor {
             started: Arc::clone(&started1),
             stopping: Arc::clone(&stopping1),
@@ -178,8 +179,8 @@ fn test_restart_sync_actor() {
         actix_rt::spawn(async move {
             let _ = addr.send(Num(4)).await;
         });
-    })
-    .unwrap();
+    });
+    sys.run().unwrap();
 
     assert_eq!(started.load(Ordering::Relaxed), 2);
     assert_eq!(stopping.load(Ordering::Relaxed), 2);
@@ -229,10 +230,11 @@ fn test_run_interval() {
 
     let (sender, receiver) = sync::mpsc::channel();
     std::thread::spawn(move || {
-        System::run(move || {
+        let sys = System::new();
+        sys.block_on(async {
             let _addr = IntervalActor::new(10, sender).start();
-        })
-        .unwrap();
+        });
+        sys.run().unwrap();
     });
 
     let result = receiver
