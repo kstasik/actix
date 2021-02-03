@@ -33,7 +33,7 @@ derive = ["actix_derive"]
 mailbox_assert = []
 
 [dependencies]
-actix-rt = "2.0.0-beta.3"
+actix-rt = "2"
 actix_derive = { version = "0.5", optional = true }
 actix-macros = "0.2.0"
 
@@ -68,5 +68,3 @@ codegen-units = 1
 actix = { path = "." }
 actix-broker = { path = "actix-broker" }
 actix_derive = { path = "actix-derive" }
-# TODO: remove override
-actix-macros = { git = "https://github.com/actix/actix-net" }
