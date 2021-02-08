@@ -174,5 +174,5 @@ pub fn run<R>(f: R) -> std::io::Result<()>
 where
     R: std::future::Future<Output = ()> + 'static,
 {
-    Ok(actix_rt::System::new().block_on(f))
+    Ok(actix_rt::System::new("temporary").block_on(f))
 }

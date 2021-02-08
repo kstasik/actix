@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use actix_rt::ArbiterHandle;
+use actix_rt::Arbiter;
 use futures_core::stream::Stream;
 use log::error;
 
@@ -138,7 +138,7 @@ pub trait Actor: Sized + Unpin + 'static {
     }
 
     /// Start new actor in arbiter's thread.
-    fn start_in_arbiter<F>(wrk: &ArbiterHandle, f: F) -> Addr<Self>
+    fn start_in_arbiter<F>(wrk: &Arbiter, f: F) -> Addr<Self>
     where
         Self: Actor<Context = Context<Self>>,
         F: FnOnce(&mut Context<Self>) -> Self + Send + 'static,
@@ -146,7 +146,7 @@ pub trait Actor: Sized + Unpin + 'static {
         let (tx, rx) = channel::channel(DEFAULT_CAPACITY);
 
         // create actor
-        wrk.spawn_fn(move || {
+        wrk.exec_fn(move || {
             let mut ctx = Context::with_receiver(rx);
             let act = f(&mut ctx);
             let fut = ctx.into_future(act);

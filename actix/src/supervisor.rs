@@ -2,7 +2,7 @@ use std::future::Future;
 use std::pin::Pin;
 use std::task::{self, Poll};
 
-use actix_rt::ArbiterHandle;
+use actix_rt::Arbiter;
 use pin_project_lite::pin_project;
 
 use crate::actor::{Actor, AsyncContext, Supervised};
@@ -121,14 +121,14 @@ where
     }
 
     /// Start new supervised actor in arbiter's thread.
-    pub fn start_in_arbiter<F>(sys: &ArbiterHandle, f: F) -> Addr<A>
+    pub fn start_in_arbiter<F>(sys: &Arbiter, f: F) -> Addr<A>
     where
         A: Actor<Context = Context<A>>,
         F: FnOnce(&mut Context<A>) -> A + Send + 'static,
     {
         let (tx, rx) = channel::channel(DEFAULT_CAPACITY);
 
-        sys.spawn_fn(move || {
+        sys.exec_fn(move || {
             let mut ctx = Context::with_receiver(rx);
             let act = f(&mut ctx);
             let fut = ctx.into_future(act);

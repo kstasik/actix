@@ -9,7 +9,7 @@ use std::collections::HashMap;
 use std::default::Default;
 use std::rc::Rc;
 
-use actix_rt::{ArbiterHandle, System};
+use actix_rt::{Arbiter, System};
 use once_cell::sync::Lazy;
 use parking_lot::Mutex;
 
@@ -219,7 +219,7 @@ impl Registry {
 /// ```
 #[derive(Debug)]
 pub struct SystemRegistry {
-    system: ArbiterHandle,
+    system: Arbiter,
     registry: HashMap<TypeId, Box<dyn Any + Send>>,
 }
 
@@ -230,7 +230,7 @@ static SREG: Lazy<Mutex<HashMap<usize, SystemRegistry>>> =
 #[allow(unused_variables)]
 pub trait SystemService: Actor<Context = Context<Self>> + Supervised + Default {
     /// Construct and start system service
-    fn start_service(wrk: &ArbiterHandle) -> Addr<Self> {
+    fn start_service(wrk: &Arbiter) -> Addr<Self> {
         Supervisor::start_in_arbiter(wrk, |ctx| {
             let mut act = Self::default();
             act.service_started(ctx);
@@ -264,7 +264,7 @@ pub trait SystemService: Actor<Context = Context<Self>> + Supervised + Default {
 }
 
 impl SystemRegistry {
-    pub(crate) fn new(system: ArbiterHandle) -> Self {
+    pub(crate) fn new(system: Arbiter) -> Self {
         Self {
             system,
             registry: HashMap::default(),

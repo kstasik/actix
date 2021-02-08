@@ -129,7 +129,7 @@ where
             });
         }
 
-        System::current().arbiter().spawn(Self {
+        actix_rt::Arbiter::spawn(Self {
             queue: Some(sender),
             msgs: rx,
         });
@@ -402,7 +402,7 @@ mod tests {
 
     #[test]
     fn nested_sync_arbiters() {
-        System::new().block_on(async {
+        System::new("temporary").block_on(async {
             let addr = SyncArbiter::start(1, SyncActor1::run);
             let (tx, rx) = oneshot::channel();
             addr.send(Msg(tx)).await.unwrap();
